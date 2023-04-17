@@ -17,13 +17,13 @@ DirStructType *mkDirStruct(int index, uint8_t *e)
 
     // copy name + null terminator
     int name_index; // index for the name
-    char letter; // temp storage for the letter at that index
-    for(name_index = 0; name_index<8 ; name_index++){
-        letter = dir_addr[name_index+1]; // store the letter found
+    char name_letter; // temp storage for the letter at that index
+    for(name_index = 0; name_index<8; name_index++){
+        name_letter = dir_addr[name_index+1]; // store the letter found
         // check if the char is a space character (32 in ASCII)
-        if( letter != 32){
+        if( name_letter != 32){
             // printf("%c\n",letter); // print the letter
-            d->name[name_index] = letter; // store the letter
+            d->name[name_index] = name_letter; // store the letter
         }
         else{
             break;
@@ -34,12 +34,13 @@ DirStructType *mkDirStruct(int index, uint8_t *e)
 
     // copy extension + null terminator
     int ext_index; // index for ext
+    char ext_letter; // temp storage for the letter at that index
     for(ext_index=0; ext_index<3; ext_index++){
-        letter = dir_addr[ext_index+9]; // store the letter found
+        ext_letter = dir_addr[ext_index+9]; // store the letter found
         // check if the char is a space character (32 in ASCII)
-        if( letter != 32){
+        if( ext_letter != 32){
             // printf("%c\n", letter); // print the letter
-            d->extension[ext_index] = letter;
+            d->extension[ext_index] = ext_letter;
         }
         else{
             break;
@@ -97,10 +98,11 @@ void cpmDir(){
     int block_index; // store the extent index
     int file_size; // store size of the file in bytes
     int NB; // store the number of fully loaded blocks
-    DirStructType *cpm_extent = (DirStructType *)malloc(sizeof(DirStructType)); // place to store extent data
+    DirStructType *cpm_extent; // define where to store extent
 
     // iterate over extents in block 0
     for(extent_index = 0; extent_index < 32; extent_index++){
+        cpm_extent = (DirStructType *)malloc(sizeof(DirStructType)); // set value to null
         cpm_extent = mkDirStruct(extent_index, block0); // get the extent data and store it
         // check if the file is valid
         if(cpm_extent->status != 0xe5){
@@ -115,6 +117,7 @@ void cpmDir(){
             NB--; // decrease by 1 to account for partially filled sector
             file_size = NB * 1024 + cpm_extent->RC * 128 + cpm_extent->BC; // calc file size
             printf("%s.%s %d\n",cpm_extent->name, cpm_extent->extension, file_size);// print file name and size
+            free(cpm_extent); // free data used by malloc
         }
     }
 }
