@@ -9,7 +9,7 @@ DirStructType *mkDirStruct(int index, uint8_t *e)
     // retrieve mem addr of desired extent
     uint8_t *dir_addr = (e + index * EXTENT_SIZE);
 
-    // create a new pointer to a DirStructType named "d" an allocate memory
+    // create a new pointer to a DirStructType named "d" and allocate memory
     DirStructType *d = (DirStructType *)malloc(sizeof(DirStructType));
 
     // copy status
@@ -88,9 +88,35 @@ void printFreeList()
 }
 
 // print all directory entries, just the names and sizes
-void cpmDir()
-{
-    /* Add your code here */
+void cpmDir(){
+    printf("DIRECTORY LISTING\n");
+    uint8_t block0[BLOCK_SIZE]; // define where block 0 data is stored
+    blockRead(block0, 0); // read data from block 0 into "block0"
+
+    int extent_index; // store the extent number
+    int block_index; // store the extent index
+    int file_size; // store size of the file in bytes
+    int NB; // store the number of fully loaded blocks
+    DirStructType *cpm_extent = (DirStructType *)malloc(sizeof(DirStructType)); // place to store extent data
+
+    // iterate over extents in block 0
+    for(extent_index = 0; extent_index < 32; extent_index++){
+        cpm_extent = mkDirStruct(extent_index, block0); // get the extent data and store it
+        // check if the file is valid
+        if(cpm_extent->status != 0xe5){
+            NB = 0; // set the num bytes initially to 0 used
+            // iterate over blocks in the DirStructType (there are 16)
+            for(block_index=0; block_index < 16; block_index++){
+                // check if the block is valid
+                if(cpm_extent->blocks[block_index] != 0){
+                    NB++;// increase the num bytes used
+                }
+            }
+            NB--; // decrease by 1 to account for partially filled sector
+            file_size = NB * 1024 + cpm_extent->RC * 128 + cpm_extent->BC; // calc file size
+            printf("%s.%s %d\n",cpm_extent->name, cpm_extent->extension, file_size);// print file name and size
+        }
+    }
 }
 
 bool checkLegalName(char *name)
