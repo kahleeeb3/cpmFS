@@ -24,14 +24,14 @@ int main(int argc, char * argv[]) {
   uint8_t buffer1[BLOCK_SIZE],buffer2[BLOCK_SIZE]; 
   int i; 
   readImage("image1.img"); 
-  makeFreeList(); 
+  // makeFreeList(); 
   cpmDir(); 
-  printFreeList(); 
-  cpmDelete("shortf.ps");
-  cpmDir();
-  cpmRename("mytestf1.txt","mytest2.tx");
-  fprintf(stdout,"cpmRename return code = %d,\n",cpmRename("mytestf","mytestv2.x")); 
-  cpmDir(); 
-  printFreeList(); 
+  // printFreeList(); 
+  // cpmDelete("shortf.ps");
+  // cpmDir();
+  // cpmRename("mytestf1.txt","mytest2.tx");
+  // fprintf(stdout,"cpmRename return code = %d,\n",cpmRename("mytestf","mytestv2.x")); 
+  // cpmDir(); 
+  // printFreeList(); 
 }
 
