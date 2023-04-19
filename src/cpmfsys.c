@@ -114,7 +114,29 @@ void makeFreeList()
 
 void printFreeList()
 {
-    /* Add your code here */
+    int block_row_index; // index of the row for the 16x16 FreeList
+    int block_column_index; // index of the column for the 16x16 FreeList
+
+    // for each row (of 16)
+    for(block_row_index=0; block_row_index<16; block_row_index++){
+        
+        // print the hex address of the first block in that row
+        printf("%02X: ", block_row_index*16);
+
+        // for each row (of 16)
+        for(block_column_index=0; block_column_index<16; block_column_index++){
+
+            // if the block is used
+            if(freeList[(block_row_index*16)+block_column_index] == false){
+                printf("* ");
+            }
+            // else
+            else{
+                printf(". ");
+            }
+        }
+        printf("\n"); // new line for the next row
+    }
 }
 
 // print all directory entries, just the names and sizes
