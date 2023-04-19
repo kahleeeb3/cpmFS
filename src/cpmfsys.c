@@ -80,7 +80,36 @@ void writeDirStruct(DirStructType *d, uint8_t index, uint8_t *e)
 
 void makeFreeList()
 {
-    /* Add your code here */
+    // set all blocks to be free initially
+    int i;
+    for(i=1; i<NUM_BLOCKS; i++){
+        freeList[i] = true; // by default, mark it as unused (true)
+    }
+    freeList[0] =  false; // the superblock is always in use
+
+    int extent_index; // store the extent number
+    int block_index; // store the extent index
+
+    uint8_t *e = (uint8_t*) malloc(BLOCK_SIZE); // define where block 0 data is stored
+    blockRead(e, 0); // read data from block 0 into "block0"
+
+    // get the block pointer values from the extent
+    for(extent_index = 0; extent_index < 32; extent_index++){
+        DirStructType *d = (DirStructType *)malloc(sizeof(DirStructType)); // set value to null
+        d = mkDirStruct(extent_index, e); // get the extent data and store it
+        if(d->status != 0xe5){
+            for(block_index=0; block_index < 16; block_index++){
+                // if the block is not invalid
+                if(d->blocks[block_index] != 0){
+                    freeList[d->blocks[block_index]] = false; // mark as used
+                }
+            }
+        }
+
+        free(d); // free memory for d
+    }
+    
+    free(e); // free memory for e
 }
 
 void printFreeList()
@@ -91,35 +120,37 @@ void printFreeList()
 // print all directory entries, just the names and sizes
 void cpmDir(){
     printf("DIRECTORY LISTING\n");
-    uint8_t block0[BLOCK_SIZE]; // define where block 0 data is stored
-    blockRead(block0, 0); // read data from block 0 into "block0"
+    uint8_t *e = (uint8_t*) malloc(BLOCK_SIZE); // define where block 0 data is stored
+    blockRead(e, 0); // read data from block 0 into "block0"
 
     int extent_index; // store the extent number
     int block_index; // store the extent index
     int file_size; // store size of the file in bytes
     int NB; // store the number of fully loaded blocks
-    DirStructType *cpm_extent; // define where to store extent
 
     // iterate over extents in block 0
     for(extent_index = 0; extent_index < 32; extent_index++){
-        cpm_extent = (DirStructType *)malloc(sizeof(DirStructType)); // set value to null
-        cpm_extent = mkDirStruct(extent_index, block0); // get the extent data and store it
+        DirStructType *d = (DirStructType *)malloc(sizeof(DirStructType)); // set value to null
+        d = mkDirStruct(extent_index, e); // get the extent data and store it
+        
+        NB = 0; // set the num bytes initially to 0 used
+        
         // check if the file is valid
-        if(cpm_extent->status != 0xe5){
-            NB = 0; // set the num bytes initially to 0 used
+        if(d->status != 0xe5){
             // iterate over blocks in the DirStructType (there are 16)
             for(block_index=0; block_index < 16; block_index++){
                 // check if the block is valid
-                if(cpm_extent->blocks[block_index] != 0){
+                if(d->blocks[block_index] != 0){
                     NB++;// increase the num bytes used
                 }
             }
             NB--; // decrease by 1 to account for partially filled sector
-            file_size = NB * 1024 + cpm_extent->RC * 128 + cpm_extent->BC; // calc file size
-            printf("%s.%s %d\n",cpm_extent->name, cpm_extent->extension, file_size);// print file name and size
-            free(cpm_extent); // free data used by malloc
+            file_size = NB * 1024 + d->RC * 128 + d->BC; // calc file size
+            printf("%s.%s %d\n",d->name, d->extension, file_size);// print file name and size
         }
+        free(d); // free data used by malloc
     }
+    free(e);
 }
 
 bool checkLegalName(char *name)
