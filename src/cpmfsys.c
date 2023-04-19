@@ -139,7 +139,6 @@ void printFreeList()
     }
 }
 
-// print all directory entries, just the names and sizes
 void cpmDir(){
     printf("DIRECTORY LISTING\n");
     uint8_t *e = (uint8_t*) malloc(BLOCK_SIZE); // define where block 0 data is stored
