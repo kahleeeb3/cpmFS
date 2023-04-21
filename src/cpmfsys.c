@@ -177,7 +177,57 @@ void cpmDir(){
 
 bool checkLegalName(char *name)
 {
-    /* Add your code here */
+    int name_length = strlen(name);
+    int name_index;
+    int dot_quantity = 0; // stores the number of "." in the file name
+    int file_name_size = 0; // track how long the file name is
+    int file_ext_size = 0; // track how long the file name is
+    char c; // track current char
+
+    for(name_index = 0; name_index < name_length; name_index++){
+        c = name[name_index]; // store the current char
+
+
+
+        // check that its a char or a number
+        if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9')) {
+            // is a valid char. Check that file anme is right size
+            if(dot_quantity == 0){
+                file_name_size++;
+                if(file_name_size > 8){
+                    printf("File Name Error: The file name must be max 8 chars\n");
+                    return false;
+                }
+            }
+            else{
+                file_ext_size++;
+                if(file_ext_size>3){
+                    printf("File Name Error: The file ext must be max 3 chars\n");
+                    return false;
+                }
+            }
+        }
+
+        // check for '.'
+        else if( c == '.'){
+            dot_quantity++;
+            if(dot_quantity > 1){
+                printf("File Name Error: Only 1 '.' is allowed in the file name\n");
+                return false;
+            }
+        }
+
+        // else not a valid char
+        else{
+            printf("File Name Error: File contains illegal char '%c'\n", c);
+            return false;
+        }
+    }
+
+    if(dot_quantity == 0){
+        printf("warning: file name '%s' contains no file extension...\n", name);
+    }
+    return true; // is a valid file name
 }
 
 int findExtentWithName(char *name, uint8_t *block0)
@@ -227,5 +277,5 @@ int cpmDelete(char *fileName)
 
 int cpmRename(char *oldName, char *newName)
 {
-    /* Add your code here */
+    checkLegalName(newName);
 }
