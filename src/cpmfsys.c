@@ -146,15 +146,16 @@ void cpmDir(){
 
     int extent_index; // store the extent number
     int block_index; // store the extent index
-    int file_size; // store size of the file in bytes
-    int NB; // store the number of fully loaded blocks
+    
+    // int NB; // store the number of fully loaded blocks
 
     // iterate over extents in block 0
     for(extent_index = 0; extent_index < 32; extent_index++){
         DirStructType *d = (DirStructType *)malloc(sizeof(DirStructType)); // set value to null
         d = mkDirStruct(extent_index, e); // get the extent data and store it
         
-        NB = 0; // set the num bytes initially to 0 used
+        int file_size = 0; // store size of the file in bytes
+        int NB = 0; // set the num bytes initially to 0 used
         
         // check if the file is valid
         if(d->status != 0xe5){
@@ -166,7 +167,7 @@ void cpmDir(){
                 }
             }
             NB--; // decrease by 1 to account for partially filled sector
-            file_size = NB * 1024 + d->RC * 128 + d->BC; // calc file size
+            file_size = (NB * 1024) + (d->RC * 128) + d->BC; // calc file size
             printf("%s.%s %d\n",d->name, d->extension, file_size);// print file name and size
         }
         free(d); // free data used by malloc
@@ -181,14 +182,47 @@ bool checkLegalName(char *name)
 
 int findExtentWithName(char *name, uint8_t *block0)
 {
-    /* Add your code here */
+    
+    // split the file name
+    char *dot_ptr = strrchr(name, '.'); // find where the "." is
+    char  search_name[9]; // store file name
+    char  search_ext[4]; // store file extension
+
+    // copy name
+    strncpy(search_name, name, dot_ptr - name); // copy char before "."
+    search_name[dot_ptr - name] = '\0'; // null terminate
+
+    // copy extension
+    strncpy(search_ext, dot_ptr + 1, strlen(dot_ptr + 1)); // copy char after "."
+    search_ext[strlen(dot_ptr + 1)] = '\0'; // null terminate
+    
+    // iterate over each extent and check file name
+    int extent_index; // store the extent number
+    for(extent_index = 0; extent_index < 32; extent_index++){
+        DirStructType *d = (DirStructType *)malloc(sizeof(DirStructType)); // make room for extent data
+        d = mkDirStruct(extent_index, block0); // get the extent data and store it
+        if(d->status != 0xe5){
+
+            // check that the files match
+            int name_match = strcmp(search_name, d->name);
+            int ext_match = strcmp(search_ext, d->extension);
+            if(name_match == 0 && ext_match == 0){
+                return extent_index;
+            }
+        }
+        free(d); // free data used by malloc
+    }
 
     return -1; // file just not found in directory block
 }
 
 int cpmDelete(char *fileName)
 {
-    /* Add your code here */
+    uint8_t *e = (uint8_t*) malloc(BLOCK_SIZE); // define where block 0 data is stored
+    blockRead(e, 0); // read data from block 0 into "block0"
+    int ext_number = findExtentWithName(fileName, e);
+    printf("%d\n", ext_number);
+    free(e); // free data from malloc
 }
 
 int cpmRename(char *oldName, char *newName)
