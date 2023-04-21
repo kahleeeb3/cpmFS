@@ -293,5 +293,43 @@ int cpmDelete(char *fileName)
 
 int cpmRename(char *oldName, char *newName)
 {
-    checkLegalName(newName);
+    bool legal_name = checkLegalName(newName);
+
+    if(legal_name == false){
+        return -1;
+    }
+
+    // get extent from name
+    uint8_t *e = (uint8_t*) malloc(BLOCK_SIZE);
+    blockRead(e, 0); // read data from block 0
+    int extent_index = findExtentWithName(oldName, e); // find correct extent
+
+    // get extent dir struct
+    DirStructType *d = (DirStructType *)malloc(sizeof(DirStructType)); // set value to null
+    d = mkDirStruct(extent_index, e); // get the extent data and store it
+
+    // split the file name
+    char *dot_ptr = strrchr(newName, '.'); // find where the "." is
+    char  name[9]; // store file name
+    char  ext[4]; // store file extension
+
+    // copy name
+    strncpy(name, newName, dot_ptr - newName); // copy char before "."
+    name[dot_ptr - newName] = '\0'; // null terminate
+
+    // copy extension
+    strncpy(ext, dot_ptr + 1, strlen(dot_ptr + 1)); // copy char after "."
+    ext[strlen(dot_ptr + 1)] = '\0'; // null terminate
+    
+    // change the name/extension
+    strcpy(d->name, name);
+    strcpy(d->extension, ext);
+
+
+    // write back to the specified index of the extent in block of memory
+    writeDirStruct(d, extent_index, e);
+
+    free(e); // free data from malloc
+    free(d); // free data from malloc
+    
 }
