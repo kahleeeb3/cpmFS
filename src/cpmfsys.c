@@ -270,9 +270,25 @@ int cpmDelete(char *fileName)
 {
     uint8_t *e = (uint8_t*) malloc(BLOCK_SIZE); // define where block 0 data is stored
     blockRead(e, 0); // read data from block 0 into "block0"
-    int ext_number = findExtentWithName(fileName, e);
-    printf("%d\n", ext_number);
+
+    int extent_index = findExtentWithName(fileName, e); // find correct extent
+    DirStructType *d = (DirStructType *)malloc(sizeof(DirStructType)); // set value to null
+    d = mkDirStruct(extent_index, e); // get the extent data and store it
+    d->status = 0xe5; // mark as unused
+
+    // remove blocks from free list
+    int block_index;
+    for(block_index=0; block_index<BLOCKS_PER_EXTENT; block_index++){
+        if(d->blocks[block_index] != 0){
+            freeList[d->blocks[block_index]] = true; // mark as unused
+        }
+    }
+
+    // write back to the specified index of the extent in block of memory
+    writeDirStruct(d, extent_index, e);
+
     free(e); // free data from malloc
+    free(d); // free data from malloc
 }
 
 int cpmRename(char *oldName, char *newName)
