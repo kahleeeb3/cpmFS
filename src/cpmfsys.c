@@ -16,16 +16,15 @@ DirStructType *mkDirStruct(int index, uint8_t *e)
     int name_length;
     for(name_length = 0; name_length<8; name_length++){
         // if its a space char
-        if( dir_addr[name_length+1] == 32){
+        if( dir_addr[name_length+1] == ' '){
             break;
         }
     }
     
-    
     // find extension length
     int extension_length; // index for ext
     for(extension_length=0; extension_length<3; extension_length++){
-        if(dir_addr[extension_length+9] == 32){
+        if(dir_addr[extension_length+9] == ' '){
             break;
         }
     }
@@ -156,8 +155,6 @@ bool checkLegalName(char *name)
 
     for(name_index = 0; name_index < name_length; name_index++){
         c = name[name_index]; // store the current char
-
-
 
         // check that its a char or a number
         if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9')) {
