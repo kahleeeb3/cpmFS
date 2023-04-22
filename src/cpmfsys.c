@@ -30,11 +30,11 @@ DirStructType *mkDirStruct(int index, uint8_t *e)
     }
     
     // copy memory
+    memcpy(&d->status, dir_addr, 1); // copy status   
     memcpy(&d->name, dir_addr + 1, name_length); // copy name
     d->name[name_length+1] = '\0'; // null terminate
     memcpy(&d->extension, dir_addr + 9, extension_length); // copy extension
     d->extension[extension_length+1] = '\0'; // null terminate
-    memcpy(&d->status, dir_addr, 1); // copy status   
     memcpy(&d->BC, dir_addr + 13, 1); // copy BC
     memcpy(&d->RC, dir_addr + 15, 1); // copy RC
     memcpy(&d->blocks, dir_addr + 16, 16); // copy blocks
@@ -44,7 +44,32 @@ DirStructType *mkDirStruct(int index, uint8_t *e)
 
 void writeDirStruct(DirStructType *d, uint8_t index, uint8_t *e)
 {
-    /* Add your code here */
+    
+    // retrieve mem addr of desired extent
+    uint8_t *dir_addr = (e + index * EXTENT_SIZE);
+    
+    // write the status
+    memcpy(dir_addr, &d->status, 1); // copy status   
+
+    // write the name
+    int n_len = strlen(d->name);
+    memcpy(dir_addr + 1, &d->name, n_len); // copy name
+    memset(dir_addr + 1 + n_len, ' ', 8 - n_len); // fill rest of bytes with spaces
+
+    // write the extension
+    int e_len = strlen(d->extension);
+    memcpy(dir_addr + 9, &d->extension, e_len); // copy extension
+    memset(dir_addr + 9 + e_len, ' ', 3 - e_len); // fill rest of bytes with spaces
+
+    // write the blocks
+    memcpy(dir_addr + 16, &d->blocks, 16); // copy blocks
+
+    blockWrite(e,0); // write changes to block
+
+    // if we want the changes to be permanent we can save it to the file itself
+    // since we want the steps to be repeatable, we will simply write to the 
+    // locally stored block instead.
+    // writeImage(char *fileName) 
 }
 
 void makeFreeList()
@@ -90,7 +115,7 @@ void printFreeList()
     for(block_row_index=0; block_row_index<16; block_row_index++){
         
         // print the hex address of the first block in that row
-        printf("%02X: ", block_row_index*16);
+        printf("%02x: ", block_row_index*16);
 
         // for each row (of 16)
         for(block_column_index=0; block_column_index<16; block_column_index++){
