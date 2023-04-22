@@ -289,6 +289,7 @@ int cpmDelete(char *fileName)
 
     free(e); // free data from malloc
     free(d); // free data from malloc
+    return 0;
 }
 
 int cpmRename(char *oldName, char *newName)
@@ -332,4 +333,5 @@ int cpmRename(char *oldName, char *newName)
     free(e); // free data from malloc
     free(d); // free data from malloc
     
+    return 0;
 }
